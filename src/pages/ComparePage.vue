@@ -10,6 +10,16 @@ const router = useRouter()
 const user1Name = computed(() => route.params.user1 as string)
 const user2Name = computed(() => route.params.user2 as string)
 
+// Access control: must be logged in and be one of the two users
+const accessDenied = computed(() => {
+  if (!currentUser.value) return 'notLoggedIn'
+  const curr = currentUser.value.toLowerCase()
+  if (curr !== user1Name.value.toLowerCase() && curr !== user2Name.value.toLowerCase()) {
+    return 'notInvolved'
+  }
+  return null
+})
+
 interface MatchGroup {
   prefixo: string
   pais: string
@@ -26,6 +36,11 @@ const totalUser1Gives = computed(() => user1CanGive.value.reduce((t, g) => t + g
 const totalUser2Gives = computed(() => user2CanGive.value.reduce((t, g) => t + g.numeros.length, 0))
 
 onMounted(async () => {
+  if (accessDenied.value) {
+    loadingCompare.value = false
+    return
+  }
+
   const [u1, u2] = await Promise.all([getUser(user1Name.value), getUser(user2Name.value)])
 
   if (!u1) notFound.value.push(user1Name.value)
@@ -114,6 +129,14 @@ const handleLogout = () => {
     <div v-if="loadingCompare" class="loading-screen">
       <div class="loading-spinner"></div>
       <p>Calculando trocas...</p>
+    </div>
+
+    <!-- Access denied -->
+    <div v-else-if="accessDenied" class="not-found">
+      <h2>🔒 Acesso restrito</h2>
+      <p v-if="accessDenied === 'notLoggedIn'">Você precisa estar logado para comparar coleções.</p>
+      <p v-else>Você só pode comparar a sua própria coleção com a de outros jogadores.</p>
+      <router-link to="/" class="btn-back">← Voltar</router-link>
     </div>
 
     <!-- Not found warning -->

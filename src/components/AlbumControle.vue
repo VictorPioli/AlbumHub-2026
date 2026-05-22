@@ -144,16 +144,15 @@ const limparFiltro = () => {
     <header class="header">
       <div class="header-modo">
         <span v-if="isAdmin" class="badge-admin">✏️ Editando</span>
-        <span v-else class="badge-readonly">👁️ Somente Leitura</span>
+        <span v-else class="badge-readonly">Somente Leitura</span>
       </div>
-      <h1>⚽ Álbum Panini Copa 2026</h1>
-      <div class="progresso">
-        <div class="stats">
-          <span>{{ figurinhasObtidas }} / {{ totalFigurinhas }}</span>
-          <span>{{ porcentagem }}%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: porcentagem + '%' }"></div>
+      <div class="header-main">
+        <span class="header-title">Álbum Copa 2026</span>
+        <div class="header-progress">
+          <div class="header-progress-bar">
+            <div class="header-progress-fill" :style="{ width: porcentagem + '%' }"></div>
+          </div>
+          <span class="header-progress-label">{{ figurinhasObtidas }} / {{ totalFigurinhas }} &nbsp;·&nbsp; {{ porcentagem }}%</span>
         </div>
       </div>
     </header>
@@ -286,14 +285,11 @@ const limparFiltro = () => {
 
 /* Header */
 .header {
-  text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   background: #ffffff;
-  padding: 30px 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border-top: 6px solid #111; /* Black blocky top line */
-  border-bottom: 4px solid #e2e8f0;
+  padding: 14px 20px 14px;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   position: relative;
   overflow: hidden;
 }
@@ -303,47 +299,56 @@ const limparFiltro = () => {
   position: absolute;
   top: 0;
   left: 0;
-  height: 6px;
+  height: 3px;
   width: 100%;
   background: linear-gradient(90deg, #e3342f 0%, #f6993f 20%, #f1c40f 40%, #38c172 60%, #3490dc 80%, #9561e2 100%);
 }
 
-.header h1 {
-  font-size: 2.5em;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: -1px;
-  color: #111;
-  margin-bottom: 20px;
-}
-
-.progresso {
-  max-width: 420px;
-  margin: 0 auto;
-}
-
-.stats {
+.header-main {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 1.1em;
-  font-weight: 700;
-  color: #555;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.progress-bar {
+.header-title {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: 0.1px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
+}
+
+.header-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  height: 28px;
-  background: #e2e8f0;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 2px solid #cbd5e1;
+  max-width: 360px;
 }
 
-.progress-fill {
+.header-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: #e8e8ed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.header-progress-fill {
   height: 100%;
-  background: #111; /* Matching the black blocky logo style */
+  background: #1d1d1f;
+  border-radius: 4px;
   transition: width 0.4s ease;
+}
+
+.header-progress-label {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: #86868b;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
 }
 
 /* Controles */
