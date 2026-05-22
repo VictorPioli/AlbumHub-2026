@@ -34,6 +34,7 @@ onMounted(async () => {
 })
 const filtro = ref('')
 const grupoSelecionado = ref<string | null>(null)
+const filtroEstado = ref<'todos' | 'faltantes' | 'repetidas'>('todos')
 
 // Grupos reativos mapeados para os países reativos
 const gruposReativos = computed(() =>
@@ -48,11 +49,21 @@ const gruposFiltrados = computed(() => {
   return gruposReativos.value
     .map(g => ({
       ...g,
-      paises: g.paises.filter(p => {
-        const grupoMatch = !grupoSelecionado.value || g.letra === grupoSelecionado.value
-        const termoMatch = !termo || p.pais.toLowerCase().includes(termo) || g.letra.toLowerCase().includes(termo)
-        return grupoMatch && termoMatch
-      }),
+      paises: g.paises
+        .filter(p => {
+          const grupoMatch = !grupoSelecionado.value || g.letra === grupoSelecionado.value
+          const termoMatch = !termo || p.pais.toLowerCase().includes(termo) || g.letra.toLowerCase().includes(termo)
+          return grupoMatch && termoMatch
+        })
+        .map(p => ({
+          ...p,
+          figurinhas: filtroEstado.value === 'todos'
+            ? p.figurinhas
+            : filtroEstado.value === 'faltantes'
+              ? p.figurinhas.filter(f => !f.possui)
+              : p.figurinhas.filter(f => f.repetida),
+        }))
+        .filter(p => p.figurinhas.length > 0),
     }))
     .filter(g => g.paises.length > 0)
 })
@@ -136,6 +147,7 @@ const salvarAlbum = async () => {
 const limparFiltro = () => {
   filtro.value = ''
   grupoSelecionado.value = null
+  filtroEstado.value = 'todos'
 }
 </script>
 
@@ -165,7 +177,7 @@ const limparFiltro = () => {
         class="search-input"
       />
       <button
-        v-if="filtro || grupoSelecionado"
+        v-if="filtro || grupoSelecionado || filtroEstado !== 'todos'"
         @click="limparFiltro"
         class="btn-limpar"
       >
@@ -181,6 +193,25 @@ const limparFiltro = () => {
         <span v-else-if="salvoComSucesso">✅ Salvo!</span>
         <span v-else>💾 Salvar</span>
       </button>
+    </div>
+
+    <!-- Filtro faltantes/repetidas (apenas visitantes) -->
+    <div v-if="!isAdmin" class="filtro-estado">
+      <button
+        class="filtro-estado-btn"
+        :class="{ ativo: filtroEstado === 'todos' }"
+        @click="filtroEstado = 'todos'"
+      >Todas</button>
+      <button
+        class="filtro-estado-btn filtro-estado-btn--faltantes"
+        :class="{ ativo: filtroEstado === 'faltantes' }"
+        @click="filtroEstado = 'faltantes'"
+      >Faltantes</button>
+      <button
+        class="filtro-estado-btn filtro-estado-btn--repetidas"
+        :class="{ ativo: filtroEstado === 'repetidas' }"
+        @click="filtroEstado = 'repetidas'"
+      >Repetidas</button>
     </div>
 
     <!-- Filtro de grupos -->
@@ -452,6 +483,33 @@ const limparFiltro = () => {
 .btn-publicar:hover {
   background: #6d28d9;
 }
+
+/* Filtro faltantes/repetidas */
+.filtro-estado {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.filtro-estado-btn {
+  padding: 6px 18px;
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 20px;
+  background: transparent;
+  color: #6e6e73;
+  font-size: 0.82em;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filtro-estado-btn:hover { border-color: rgba(0,0,0,0.28); color: #1d1d1f; }
+.filtro-estado-btn.ativo { background: #1d1d1f; color: #f5f5f7; border-color: #1d1d1f; }
+.filtro-estado-btn--faltantes.ativo { background: #ff3b30; border-color: #ff3b30; }
+.filtro-estado-btn--repetidas.ativo { background: #f59e0b; border-color: #f59e0b; color: #fff; }
 
 /* Chips de grupos */
 .grupos-filtro {

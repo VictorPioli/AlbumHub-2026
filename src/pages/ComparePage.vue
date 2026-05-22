@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUser, currentUser, logout } from '../stores/users'
 import { albumData } from '../data/album'
+import tacaDaCopa from '../assets/taca-da-copa.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,7 +115,10 @@ const handleLogout = () => {
 <template>
   <!-- Nav -->
   <nav class="compare-nav">
-    <router-link to="/" class="nav-logo">⚽ Album Copa 2026</router-link>
+    <router-link to="/" class="nav-logo">
+      <img :src="tacaDaCopa" alt="Copa 2026" class="nav-trophy" />
+      Album Copa 2026
+    </router-link>
     <div class="nav-right">
       <template v-if="currentUser">
         <router-link :to="`/${currentUser}`" class="nav-link">@{{ currentUser }}</router-link>
@@ -273,11 +277,21 @@ const handleLogout = () => {
   font-family: 'Montserrat', sans-serif;
 }
 .nav-logo {
-  font-size: 1.1em;
-  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  font-weight: 600;
   color: #fff;
   text-decoration: none;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
+}
+.nav-trophy {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 .nav-right { display: flex; align-items: center; gap: 12px; }
 .nav-link { color: #94a3b8; text-decoration: none; font-weight: 700; font-size: 0.85em; font-family: 'Montserrat', sans-serif; }

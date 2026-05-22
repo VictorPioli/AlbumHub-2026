@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { currentUser, logout, getUser, getAllUsers, updatePhone } from '../stores/users'
-import { albumData } from '../data/album'
+import { currentUser, logout, getUser, getAllUsers } from '../stores/users'
 import AlbumControle from '../components/AlbumControle.vue'
 import type { UserRecord } from '../stores/users'
+import tacaDaCopa from '../assets/taca-da-copa.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,9 +24,6 @@ const loadProfile = async () => {
     u => u.nickname.toLowerCase() !== (currentUser.value?.toLowerCase() ?? '\x00')
   )
   loadingProfile.value = false
-  if (profileUser.value) {
-    phoneEdit.value = profileUser.value.phone ?? ''
-  }
   // Pre-select the profile user when visiting someone else's page
   if (currentUser.value && !isOwner.value && profileUser.value) {
     compareWith.value = profileUser.value.nickname
@@ -52,56 +49,16 @@ const startCompare = () => {
   }
 }
 
-// ── Phone edit ────────────────────────────────────────────────
-const phoneEdit = ref('')
-const editingPhone = ref(false)
-const savingPhone = ref(false)
 
-const savePhone = async () => {
-  if (!profileUser.value) return
-  savingPhone.value = true
-  await updatePhone(profileUser.value.nickname, phoneEdit.value.trim())
-  profileUser.value.phone = phoneEdit.value.trim()
-  savingPhone.value = false
-  editingPhone.value = false
-}
-
-// ── WhatsApp link ─────────────────────────────────────────────
-const whatsappLink = computed(() => {
-  const user = profileUser.value
-  if (!user?.phone) return null
-
-  const grouped: Record<string, { nums: number[]; bandeira: string }> = {}
-  for (const [id, s] of Object.entries(user.albumState)) {
-    if (!s.repetida) continue
-    const match = id.match(/^([A-Z]+)(\d+)$/)
-    if (!match) continue
-    const prefixo = match[1]
-    const numero = parseInt(match[2])
-    if (!grouped[prefixo]) {
-      const paisData = albumData.find(p => p.prefixo === prefixo)
-      const bandeira = paisData?.bandeira ?? ''
-      grouped[prefixo] = { nums: [], bandeira }
-    }
-    grouped[prefixo].nums.push(numero)
-  }
-
-  const lines: string[] = ['Olá, vi que você tem essas figurinhas:']
-  for (const [prefixo, { nums, bandeira }] of Object.entries(grouped).sort()) {
-    const flag = bandeira.startsWith('/') ? '' : `${bandeira} `
-    lines.push(`${flag}${prefixo}: ${nums.sort((a, b) => a - b).join(', ')}`)
-  }
-  lines.push('Bora fazer um rolo?')
-
-  const phone = user.phone.replace(/\D/g, '')
-  return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`
-})
 </script>
 
 <template>
   <!-- Top nav -->
   <nav class="profile-nav">
-    <router-link to="/" class="nav-logo">⚽ Album Copa 2026</router-link>
+    <router-link to="/" class="nav-logo">
+      <img :src="tacaDaCopa" alt="Copa 2026" class="nav-trophy" />
+      Album Copa 2026
+    </router-link>
     <div class="nav-right">
       <template v-if="currentUser">
         <router-link :to="`/${currentUser}`" class="nav-link">@{{ currentUser }}</router-link>
@@ -135,35 +92,7 @@ const whatsappLink = computed(() => {
             Membro desde {{ new Date(profileUser.createdAt).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) }}
           </span>
 
-          <!-- Phone: owner can edit, visitors see WhatsApp button -->
-          <div class="phone-row" v-if="isOwner">
-            <template v-if="editingPhone">
-              <input
-                v-model="phoneEdit"
-                type="tel"
-                placeholder="Ex: 5511999999999"
-                class="phone-input"
-                @keyup.enter="savePhone"
-              />
-              <button @click="savePhone" :disabled="savingPhone" class="btn-phone-save">
-                {{ savingPhone ? '⏳' : '✅ Salvar' }}
-              </button>
-              <button @click="editingPhone = false" class="btn-phone-cancel">Cancelar</button>
-            </template>
-            <template v-else>
-              <span class="phone-display">
-                📱 {{ profileUser.phone ? profileUser.phone : 'Nenhum telefone cadastrado' }}
-              </span>
-              <button @click="editingPhone = true; phoneEdit = profileUser.phone ?? ''" class="btn-phone-edit">
-                ✏️ {{ profileUser.phone ? 'Editar' : 'Adicionar' }}
-              </button>
-            </template>
-          </div>
-          <div v-else-if="currentUser && whatsappLink" class="phone-row">
-            <a :href="whatsappLink" target="_blank" class="btn-whatsapp">
-              💬 Propor troca no WhatsApp
-            </a>
-          </div>
+
         </div>
 
         <!-- Compare selector -->
@@ -217,12 +146,20 @@ const whatsappLink = computed(() => {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
 }
 .nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.95em;
   font-weight: 600;
   color: #f5f5f7;
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+.nav-trophy {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 .nav-right {
   display: flex;
@@ -360,86 +297,6 @@ const whatsappLink = computed(() => {
   font-weight: 400;
 }
 
-/* Phone */
-.phone-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-.phone-display {
-  font-size: 0.82em;
-  font-weight: 400;
-  color: #6e6e73;
-}
-.phone-input {
-  padding: 6px 11px;
-  border: 1px solid rgba(0,0,0,0.15);
-  border-radius: 10px;
-  font-size: 0.86em;
-  font-family: inherit;
-  font-weight: 400;
-  width: 190px;
-  background: #fff;
-}
-.phone-input:focus { outline: none; border-color: #1d1d1f; box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
-.btn-phone-save {
-  padding: 6px 14px;
-  background: #34c759;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 0.8em;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.15s;
-}
-.btn-phone-save:hover { opacity: 0.85; }
-.btn-phone-cancel {
-  padding: 6px 14px;
-  background: transparent;
-  color: #86868b;
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 0.8em;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-}
-.btn-phone-cancel:hover { color: #1d1d1f; border-color: rgba(0,0,0,0.25); }
-.btn-phone-edit {
-  padding: 4px 11px;
-  background: transparent;
-  color: #86868b;
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 0.75em;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-}
-.btn-phone-edit:hover { color: #1d1d1f; border-color: rgba(0,0,0,0.28); }
-.btn-whatsapp {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: transparent;
-  color: #34c759;
-  border: 1px solid rgba(52,199,89,0.4);
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 0.82em;
-  text-decoration: none;
-  font-family: inherit;
-  transition: all 0.15s;
-  margin-top: 4px;
-}
-.btn-whatsapp:hover { background: rgba(52,199,89,0.07); border-color: #34c759; }
 .compare-box {
   display: flex;
   flex-direction: column;
