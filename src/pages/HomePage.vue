@@ -3,12 +3,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { currentUser, login, register, logout, getAllUsers } from '../stores/users'
 import type { UserRecord } from '../stores/users'
+import tacaDaCopa from '../assets/taca-da-copa.png'
 
 const router = useRouter()
 
 const tab = ref<'login' | 'register'>('login')
 const nickname = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const error = ref('')
 const loading = ref(false)
 const loadingUsers = ref(true)
@@ -34,6 +36,11 @@ const submit = async () => {
     const result = await login(nick, pass)
     if (!result.ok) { error.value = result.error!; loading.value = false; return }
   } else {
+    if (pass !== confirmPassword.value) {
+      error.value = 'As senhas não coincidem'
+      loading.value = false
+      return
+    }
     const result = await register(nick, pass)
     if (!result.ok) { error.value = result.error!; loading.value = false; return }
   }
@@ -60,7 +67,10 @@ const joinedDate = (user: UserRecord) =>
   <div class="home-page">
     <header class="home-header">
       <div class="home-header-inner">
-        <h1 class="logo">⚽ Album Copa 2026</h1>
+        <h1 class="logo">
+          <img :src="tacaDaCopa" alt="Copa 2026" class="logo-trophy" />
+          Album Copa 2026
+        </h1>
         <div v-if="currentUser" class="header-user">
           <span class="header-nick">@{{ currentUser }}</span>
           <router-link :to="`/${currentUser}`" class="btn-header">Meu Perfil</router-link>
@@ -77,18 +87,22 @@ const joinedDate = (user: UserRecord) =>
       <!-- Auth Card -->
       <div v-if="!currentUser" class="auth-card">
         <div class="auth-tabs">
-          <button :class="['auth-tab', { active: tab === 'login' }]" @click="tab = 'login'">Entrar</button>
-          <button :class="['auth-tab', { active: tab === 'register' }]" @click="tab = 'register'">Criar conta</button>
+          <button :class="['auth-tab', { active: tab === 'login' }]" @click="tab = 'login'; error = ''; confirmPassword = ''">Entrar</button>
+          <button :class="['auth-tab', { active: tab === 'register' }]" @click="tab = 'register'; error = ''; confirmPassword = ''">Criar conta</button>
         </div>
 
         <form @submit.prevent="submit" class="auth-form">
           <div class="field">
             <label>Nickname</label>
-            <input v-model="nickname" type="text" placeholder="ex: Victor" autocomplete="username" required />
+            <input v-model="nickname" type="text" placeholder="hexa2026" autocomplete="username" required />
           </div>
           <div class="field">
             <label>Senha</label>
             <input v-model="password" type="password" placeholder="••••••" autocomplete="current-password" required />
+          </div>
+          <div v-if="tab === 'register'" class="field">
+            <label>Confirmar senha</label>
+            <input v-model="confirmPassword" type="password" placeholder="••••••" autocomplete="new-password" required />
           </div>
           <p v-if="loading" class="auth-error" style="color:#64748b">⏳ Conectando...</p>
         <p v-else-if="error" class="auth-error">❌ {{ error }}</p>
@@ -141,7 +155,10 @@ const joinedDate = (user: UserRecord) =>
 
 /* Header */
 .home-header {
-  background: #111;
+  background: rgba(18, 18, 18, 0.86);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   padding: 0 24px;
   position: sticky;
   top: 0;
@@ -150,48 +167,58 @@ const joinedDate = (user: UserRecord) =>
 .home-header-inner {
   max-width: 900px;
   margin: 0 auto;
-  height: 60px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .logo {
-  font-size: 1.2em;
-  font-weight: 900;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #f5f5f7;
   text-transform: uppercase;
-  letter-spacing: -0.5px;
+  letter-spacing: 0.5px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
+}
+.logo-trophy {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 .header-user {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .header-nick {
-  color: #94a3b8;
-  font-size: 0.85em;
-  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.84em;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
 }
 .btn-header {
-  padding: 6px 14px;
-  background: #fff;
-  color: #111;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
+  padding: 5px 14px;
+  background: rgba(255,255,255,0.12);
+  color: #f5f5f7;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  font-weight: 500;
   font-size: 0.8em;
   cursor: pointer;
   text-decoration: none;
-  font-family: 'Montserrat', sans-serif;
-  transition: opacity 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Montserrat', sans-serif;
+  transition: background 0.15s;
 }
-.btn-header:hover { opacity: 0.85; }
+.btn-header:hover { background: rgba(255,255,255,0.2); opacity: 1; }
 .btn-header--ghost {
   background: transparent;
-  color: #94a3b8;
-  border: 1px solid #444;
+  color: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
 }
-.btn-header--ghost:hover { color: #fff; border-color: #fff; opacity: 1; }
+.btn-header--ghost:hover { color: #f5f5f7; border-color: rgba(255,255,255,0.35); background: transparent; }
 
 /* Main */
 .home-main {
